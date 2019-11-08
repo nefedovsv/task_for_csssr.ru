@@ -146,7 +146,7 @@ class TimerComponent extends React.Component {
       </div>
     );
   }
-  // переписал через стрелучную функцию
+  // переписал через стрелочную функцию
   handleStart = () => {
     this.setState({
       interval: setInterval(
@@ -159,7 +159,7 @@ class TimerComponent extends React.Component {
       )
     });
   };
-  // переписал через стрелучную функцию
+  // переписал через стрелочную функцию
   handleStop = () => {
     clearInterval(this.state.interval);
     this.setState({
