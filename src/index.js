@@ -1,15 +1,6 @@
 import React from "react";
 import { render } from "react-dom";
 
-// Slomux — упрощённая, сломанная реализация Flux.
-// Перед вами небольшое приложение, написанное на React + Slomux.
-// Это нерабочий секундомер с настройкой интервала обновления.
-
-// Исправьте ошибки и потенциально проблемный код, почините приложение и прокомментируйте своё решение.
-
-// При нажатии на "старт" должен запускаться секундомер и через заданный интервал времени увеличивать свое значение на значение интервала
-// При нажатии на "стоп" секундомер должен останавливаться и сбрасывать свое значение
-
 const createStore = (reducer, initialState) => {
   let currentState = initialState;
   const listeners = [];
@@ -28,7 +19,7 @@ const StoreContext = React.createContext();
 
 const connect = (mapStateToProps, mapDispatchToProps) => Component => {
   class WrappedComponent extends React.Component {
-    // избавился от legasy кода, добавил контекст через static
+    // избавился от legacy кода, добавил контекст через static
     static contextType = StoreContext;
 
     render() {
@@ -76,10 +67,10 @@ const changeInterval = value => ({
 });
 
 // reducers
-const reducer = (state = 1, action) => {
+const reducer = (state = initialInterval, action) => {
   switch (action.type) {
     case CHANGE_INTERVAL:
-      return (state += action.payload);
+      return state + action.payload ? (state += action.payload) : state; // сделал запрет на введение отрицательного интервала
     default:
       return state; // должен вернуть state
   }
@@ -133,14 +124,17 @@ class TimerComponent extends React.Component {
   componentWillUnmount() {
     clearInterval(this.state.currentInterval);
   }
-
+  // погасил кнопку "Старт" во время работы таймера.
   render() {
     return (
       <div>
         <Interval />
         <div>Секундомер: {this.state.currentTime} сек.</div>
         <div>
-          <button onClick={this.handleStart}>Старт</button>
+          <button onClick={this.handleStart} disabled={this.state.interval > 0}>
+            Старт
+          </button>
+
           <button onClick={this.handleStop}>Стоп</button>
         </div>
       </div>
@@ -152,7 +146,7 @@ class TimerComponent extends React.Component {
       interval: setInterval(
         () =>
           this.setState((state, props) => ({
-            //сгруппировл несколько вызовов setState() в одно обновление для улучшения производительности.
+            //сгруппировал несколько вызовов setState() в одно обновление для улучшения производительности.
             currentTime: state.currentTime + props.currentInterval
           })),
         this.props.currentInterval * 1000 // таймер в мсек
