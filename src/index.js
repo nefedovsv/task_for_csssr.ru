@@ -10,7 +10,13 @@ const createStore = (reducer, initialState) => {
     currentState = reducer(currentState, action);
     listeners.forEach(listener => listener());
   };
-  const subscribe = listener => listeners.push(listener);
+
+  const subscribe = listener => {
+    listeners.push(listener);
+
+    // добовляем отписку
+    return () => listeners.splice(listeners.indexOf(listener), 1);
+  };
 
   return { getState, dispatch, subscribe };
 };
@@ -34,7 +40,11 @@ const connect = (mapStateToProps, mapDispatchToProps) => Component => {
 
     // заменил на componentDidMount
     componentDidMount() {
-      this.context.subscribe(this.handleChange);
+      this.unsubscribe = this.context.subscribe(this.handleChange);
+    }
+    // сделал отписку
+    componentWillUnmount() {
+      this.unsubscribe();
     }
 
     handleChange = () => {
@@ -116,7 +126,6 @@ class TimerComponent extends React.Component {
       prevProps.currentInterval !== this.props.currentInterval &&
       prevState.interval !== null
     ) {
-      clearInterval(this.state.interval);
       this.handleStart();
     }
   }
@@ -124,7 +133,7 @@ class TimerComponent extends React.Component {
   componentWillUnmount() {
     clearInterval(this.state.currentInterval);
   }
-  // погасил кнопку "Старт" во время работы таймера.
+  // погасил кнопку "Старт" и "Стоп" во время работы.
   render() {
     return (
       <div>
@@ -135,20 +144,29 @@ class TimerComponent extends React.Component {
             Старт
           </button>
 
-          <button onClick={this.handleStop}>Стоп</button>
+          <button
+            onClick={this.handleStop}
+            disabled={this.state.interval === null}
+          >
+            Стоп
+          </button>
         </div>
       </div>
     );
   }
+  // вынес в отдельный метод
+  updatetime = () =>
+    this.setState((state, props) => ({
+      //сгруппировал несколько вызовов setState() в одно обновление для улучшения производительности.
+      currentTime: state.currentTime + props.currentInterval
+    }));
+
   // переписал через стрелочную функцию
   handleStart = () => {
+    clearInterval(this.state.interval);
     this.setState({
       interval: setInterval(
-        () =>
-          this.setState((state, props) => ({
-            //сгруппировал несколько вызовов setState() в одно обновление для улучшения производительности.
-            currentTime: state.currentTime + props.currentInterval
-          })),
+        this.updatetime,
         this.props.currentInterval * 1000 // таймер в мсек
       )
     });
